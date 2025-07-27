@@ -1,73 +1,223 @@
-# Welcome to your Lovable project
+# ScribeSnap - Note-Taking Application
 
-## Project info
+A beautiful, intuitive note-taking application built with React, TypeScript, and modern web technologies.
 
-**URL**: https://lovable.dev/projects/a054ca5f-a0f2-448a-9b06-d2abd89b2ac8
+## Features
 
-## How can I edit this code?
+### Authentication
+- **Email & Password Authentication** with form validation
+- **OTP Email Verification** with resend functionality
+- **Google OAuth Integration** (requires Supabase connection)
+- **JWT Authorization** for secure API access
+- **Session Management** with local storage persistence
 
-There are several ways of editing your application.
+### Note Management
+- **Create & Edit Notes** with rich text support
+- **Color-coded Notes** (5 different color themes)
+- **Real-time Search** across all notes
+- **Delete Notes** with confirmation
+- **Auto-save** draft functionality
+- **Responsive Grid Layout** for optimal viewing
 
-**Use Lovable**
+### User Experience
+- **Mobile-responsive Design** that works on all devices
+- **Beautiful UI** with consistent design system
+- **Toast Notifications** for user feedback
+- **Loading States** and error handling
+- **Intuitive Navigation** and user flows
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a054ca5f-a0f2-448a-9b06-d2abd89b2ac8) and start prompting.
+## Technology Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Frontend**: React 18 + TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **Build Tool**: Vite
+- **Icons**: Lucide React
+- **State Management**: React Hooks + Local Storage
+- **Form Handling**: Custom validation
+- **UI Components**: Radix UI primitives
 
-**Use your preferred IDE**
+## Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn package manager
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. **Clone the repository**
+   ```bash
+   git clone <your-repository-url>
+   cd scribe-snap
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. **Open your browser**
+   Navigate to `http://localhost:8080`
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Building for Production
+
+```bash
+# Build the project
+npm run build
+
+# Preview the production build
+npm run preview
 ```
 
-**Edit a file directly in GitHub**
+## Project Structure
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+src/
+├── components/          # Reusable UI components
+│   ├── auth/           # Authentication components
+│   ├── layout/         # Layout components
+│   ├── notes/          # Note-related components
+│   └── ui/             # Base UI components (shadcn/ui)
+├── pages/              # Main page components
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions
+├── assets/             # Static assets (images, etc.)
+└── styles/             # Global styles
+```
 
-**Use GitHub Codespaces**
+## Key Components
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Authentication Flow
+- `LoginForm` - Email/password login with validation
+- `SignupForm` - User registration with password strength
+- `OTPVerification` - Email verification with 6-digit codes
+- `AuthLayout` - Consistent layout for auth pages
 
-## What technologies are used for this project?
+### Note Management
+- `NoteCard` - Individual note display with actions
+- `NoteEditor` - Rich note editing with color selection
+- `NotesGrid` - Responsive grid layout for notes
+- `AppHeader` - Navigation with search and user menu
 
-This project is built with:
+### Design System
+- **Colors**: Primary blue theme with semantic color tokens
+- **Typography**: Clean, readable font hierarchy
+- **Spacing**: Consistent spacing scale
+- **Components**: Fully customizable shadcn/ui components
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## API Integration (Backend Setup)
 
-## How can I deploy this project?
+This application is designed to work with a backend API. To enable full functionality:
 
-Simply open [Lovable](https://lovable.dev/projects/a054ca5f-a0f2-448a-9b06-d2abd89b2ac8) and click on Share -> Publish.
+### Option 1: Supabase Integration (Recommended)
+1. Connect your Lovable project to Supabase
+2. Set up authentication with email/password and Google OAuth
+3. Create a `notes` table with the following schema:
+   ```sql
+   CREATE TABLE notes (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+     title TEXT NOT NULL,
+     content TEXT NOT NULL,
+     color TEXT NOT NULL CHECK (color IN ('yellow', 'green', 'blue', 'purple', 'pink')),
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+   );
+   ```
 
-## Can I connect a custom domain to my Lovable project?
+### Option 2: Custom Backend
+1. Set up a Node.js backend with your preferred framework
+2. Implement the following endpoints:
+   - `POST /auth/signup` - User registration
+   - `POST /auth/login` - User login
+   - `POST /auth/verify-otp` - Email verification
+   - `GET /notes` - Get user notes
+   - `POST /notes` - Create note
+   - `PUT /notes/:id` - Update note
+   - `DELETE /notes/:id` - Delete note
 
-Yes, you can!
+## Mobile Support
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+The application is fully responsive and includes:
+- **Touch-friendly interface** with appropriate tap targets
+- **Mobile navigation** with collapsible search
+- **Responsive grid** that adapts to screen size
+- **Optimized forms** for mobile input
+- **Swipe gestures** for note actions
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Security Features
+
+- **Input validation** on all forms
+- **XSS protection** with proper data sanitization
+- **CSRF protection** (when backend is connected)
+- **JWT token management** with automatic refresh
+- **Secure password requirements** with strength validation
+
+## Performance Optimizations
+
+- **Lazy loading** of components
+- **Debounced search** to reduce API calls
+- **Optimistic updates** for better UX
+- **Efficient re-renders** with React.memo and useMemo
+- **Asset optimization** with Vite
+
+## Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Deployment
+
+### Option 1: Lovable Deployment
+1. Click the "Publish" button in Lovable
+2. Your app will be deployed to `https://your-project-id.lovableproject.com`
+
+### Option 2: Manual Deployment
+1. Build the project: `npm run build`
+2. Deploy the `dist` folder to your hosting provider
+3. Configure your hosting for SPA routing
+
+### Recommended Hosting Providers
+- **Vercel** - Automatic deployments from Git
+- **Netlify** - Static site hosting with serverless functions
+- **Firebase Hosting** - Google's hosting solution
+- **AWS S3 + CloudFront** - Scalable static hosting
+
+## Environment Variables
+
+When connecting to a backend, you may need these environment variables:
+
+```env
+VITE_API_URL=your-api-url
+VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the documentation at [docs.lovable.dev](https://docs.lovable.dev)
+- Join the Lovable community Discord
+
+---
+
+Built with ❤️ using [Lovable](https://lovable.dev)
