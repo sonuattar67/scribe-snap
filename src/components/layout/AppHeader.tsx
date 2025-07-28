@@ -23,6 +23,7 @@ interface AppHeaderProps {
   onSearchChange: (query: string) => void;
   onNewNote: () => void;
   onLogout: () => void;
+  onProfileClick: () => void;
 }
 
 export const AppHeader = ({
@@ -31,6 +32,7 @@ export const AppHeader = ({
   onSearchChange,
   onNewNote,
   onLogout,
+  onProfileClick,
 }: AppHeaderProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -132,7 +134,7 @@ export const AppHeader = ({
                 </p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={onProfileClick}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>

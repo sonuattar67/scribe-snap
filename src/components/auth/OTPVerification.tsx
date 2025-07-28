@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AuthLayout } from './AuthLayout';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OTPVerificationProps {
   email: string;
@@ -95,16 +96,29 @@ export const OTPVerification = ({ email, onVerificationSuccess, onBackToSignup }
     setLoading(true);
     
     try {
-      // Simulate API call - replace with actual OTP verification
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock verification success
-      if (otpString === '123456') {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: otpString,
+        type: 'signup'
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        // Get user profile from profiles table
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
         const userData = {
-          id: '1',
-          email,
-          name: email.split('@')[0],
-          avatar: null,
+          id: data.user.id,
+          email: data.user.email!,
+          name: profile?.full_name || data.user.email!.split('@')[0],
+          avatar: profile?.avatar_url || null,
         };
         
         toast({
@@ -113,17 +127,19 @@ export const OTPVerification = ({ email, onVerificationSuccess, onBackToSignup }
         });
         
         onVerificationSuccess(userData);
-      } else {
-        toast({
-          title: "Invalid OTP",
-          description: "The code you entered is incorrect. Please try again.",
-          variant: "destructive",
-        });
       }
-    } catch (error) {
+    } catch (error: any) {
+      let message = "The code you entered is incorrect. Please try again.";
+      
+      if (error.message?.includes("expired")) {
+        message = "The verification code has expired. Please request a new one.";
+      } else if (error.message?.includes("invalid")) {
+        message = "Invalid verification code. Please check and try again.";
+      }
+      
       toast({
         title: "Verification failed",
-        description: "An error occurred. Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -135,11 +151,20 @@ export const OTPVerification = ({ email, onVerificationSuccess, onBackToSignup }
     setResendLoading(true);
     
     try {
-      // Simulate API call - replace with actual resend OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
       
       toast({
-        title: "OTP sent successfully",
+        title: "Verification code sent",
         description: "A new verification code has been sent to your email",
       });
       
@@ -148,10 +173,10 @@ export const OTPVerification = ({ email, onVerificationSuccess, onBackToSignup }
       setCanResend(false);
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Failed to resend OTP",
-        description: "Please try again later",
+        title: "Failed to resend code",
+        description: error.message || "Please try again later",
         variant: "destructive",
       });
     } finally {

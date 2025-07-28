@@ -6,6 +6,7 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { AuthLayout } from './AuthLayout';
 import googleIcon from '@/assets/google-icon.png';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LoginFormProps {
   onSignupClick: () => void;
@@ -48,27 +49,49 @@ export const LoginForm = ({ onSignupClick, onForgotPasswordClick, onLoginSuccess
     setLoading(true);
     
     try {
-      // Simulate API call - replace with actual authentication
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock user data - replace with actual user data from API
-      const userData = {
-        id: '1',
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        name: email.split('@')[0],
-        avatar: null,
-      };
-      
-      toast({
-        title: "Login successful!",
-        description: "Welcome back to ScribeSnap",
+        password,
       });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        // Get user profile from profiles table
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        const userData = {
+          id: data.user.id,
+          email: data.user.email!,
+          name: profile?.full_name || data.user.email!.split('@')[0],
+          avatar: profile?.avatar_url || null,
+        };
+        
+        toast({
+          title: "Login successful!",
+          description: "Welcome back to ScribeSnap",
+        });
+        
+        onLoginSuccess(userData);
+      }
+    } catch (error: any) {
+      let message = "Invalid email or password. Please try again.";
       
-      onLoginSuccess(userData);
-    } catch (error) {
+      if (error.message === "Email not confirmed") {
+        message = "Please check your email and confirm your account before signing in.";
+      } else if (error.message?.includes("Invalid login credentials")) {
+        message = "Invalid email or password. Please check your credentials.";
+      }
+      
       toast({
         title: "Login failed",
-        description: "Invalid email or password. Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -77,10 +100,28 @@ export const LoginForm = ({ onSignupClick, onForgotPasswordClick, onLoginSuccess
   };
 
   const handleGoogleLogin = async () => {
-    toast({
-      title: "Google Login",
-      description: "Connect Supabase to enable Google authentication",
-    });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Google Login Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Google Login Error",
+        description: "Failed to initialize Google login",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

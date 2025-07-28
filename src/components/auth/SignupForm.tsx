@@ -6,6 +6,7 @@ import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { AuthLayout } from './AuthLayout';
 import googleIcon from '@/assets/google-icon.png';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SignupFormProps {
   onLoginClick: () => void;
@@ -74,19 +75,41 @@ export const SignupForm = ({ onLoginClick, onSignupSuccess }: SignupFormProps) =
     setLoading(true);
     
     try {
-      // Simulate API call - replace with actual signup
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Account created successfully!",
-        description: "Please check your email for verification code",
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: formData.name,
+          }
+        }
       });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        toast({
+          title: "Account created successfully!",
+          description: "Please check your email for verification link",
+        });
+        
+        onSignupSuccess(formData.email);
+      }
+    } catch (error: any) {
+      let message = "An error occurred. Please try again.";
       
-      onSignupSuccess(formData.email);
-    } catch (error) {
+      if (error.message?.includes("User already registered")) {
+        message = "An account with this email already exists. Please sign in instead.";
+      } else if (error.message?.includes("Password")) {
+        message = "Password is too weak. Please choose a stronger password.";
+      }
+      
       toast({
         title: "Signup failed",
-        description: "An error occurred. Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -95,10 +118,28 @@ export const SignupForm = ({ onLoginClick, onSignupSuccess }: SignupFormProps) =
   };
 
   const handleGoogleSignup = async () => {
-    toast({
-      title: "Google Signup",
-      description: "Connect Supabase to enable Google authentication",
-    });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Google Signup Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Google Signup Error",
+        description: "Failed to initialize Google signup",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
