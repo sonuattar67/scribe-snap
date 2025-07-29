@@ -114,7 +114,7 @@ src/
 This application is designed to work with a backend API. To enable full functionality:
 
 ### Option 1: Supabase Integration (Recommended)
-1. Connect your Lovable project to Supabase
+1. Connect your project to Supabase
 2. Set up authentication with email/password and Google OAuth
 3. Create a `notes` table with the following schema:
    ```sql
@@ -183,9 +183,9 @@ The application is fully responsive and includes:
 
 ## Deployment
 
-### Option 1: Lovable Deployment
-1. Click the "Publish" button in Lovable
-2. Your app will be deployed to `https://your-project-id.lovableproject.com`
+### Option 1: Static Hosting
+1. Build the project and deploy the dist folder
+2. Configure your hosting provider for SPA routing
 
 ### Option 2: Manual Deployment
 1. Build the project: `npm run build`
@@ -215,9 +215,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For support and questions:
 - Create an issue in the repository
-- Check the documentation at [docs.lovable.dev](https://docs.lovable.dev)
-- Join the Lovable community Discord
+- Check the project documentation
 
 ---
 
-Built with ❤️ using [Lovable](https://lovable.dev)
+Built with ❤️ using React and TypeScript
