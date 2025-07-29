@@ -15,22 +15,19 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!mounted) return;
+        
         if (session?.user) {
-          // Get user profile from profiles table
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
           const userData = {
             id: session.user.id,
             email: session.user.email!,
-            name: profile?.full_name || session.user.email!.split('@')[0],
-            avatar: profile?.avatar_url || null,
+            name: session.user.user_metadata?.full_name || session.user.email!.split('@')[0],
+            avatar: session.user.user_metadata?.avatar_url || null,
           };
           
           setUser(userData);
@@ -44,29 +41,38 @@ const Index = () => {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        // Get user profile from profiles table
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        const userData = {
-          id: session.user.id,
-          email: session.user.email!,
-          name: profile?.full_name || session.user.email!.split('@')[0],
-          avatar: profile?.avatar_url || null,
-        };
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         
-        setUser(userData);
-        localStorage.setItem('scribeSnapUser', JSON.stringify(userData));
+        if (!mounted) return;
+        
+        if (session?.user) {
+          const userData = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.full_name || session.user.email!.split('@')[0],
+            avatar: session.user.user_metadata?.avatar_url || null,
+          };
+          
+          setUser(userData);
+          localStorage.setItem('scribeSnapUser', JSON.stringify(userData));
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    checkSession();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleAuthSuccess = (userData: User) => {
